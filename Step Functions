@@ -1,0 +1,29 @@
+Step functions
+
+O que é?
+Orquestração de serviços, é um workflow
+
+Um local onde visualmente se arrasta caixinhas, colocando em uma ordem desejada e válida.
+
+
+
+
+É possível visualisar, editar e depurar o fluxo de trabalho da aplicação. Você pode examinar o estado de cada etapa no fluxo de trabalho para garantir que a aplicação seja executada em ordem e conforme o esperado.
+
+O que ele faz:
+
+1. Orquestração (O Maestro): Ele monta o "mapa" visual (chamado de Máquina de Estados) de como as tarefas devem seguir. Tipo um fluxograma.
+    * Exemplo: Ele garante que você só comece a "Misturar tudo" (Tarefa 4) depois que as "Misturar ingredientes secos" (Tarefa 2) e "Misturar ingredientes molhados" (Tarefa 3) estiverem prontas.
+2. Gerencia as Etapas (O Robô Fazedor de Tarefas): Cada "tarefa" no Step Functions é, na verdade, um código ou um serviço da AWS que faz algo específico.
+    * Exemplo: A tarefa "Assar" pode ser um código que espera 30 minutos (porque assar leva tempo). O Step Functions fica lá, esperando, sem gastar energia, até que o tempo acabe, e só então passa para a próxima etapa.
+3. Tratamento de Erros (O Plano B): E se o leite da receita estiver azedo? O Step Functions tem um plano!
+    * Exemplo: Se a tarefa "Pegar os ingredientes" falhar porque o supermercado está fechado, o Step Functions pode tentar a tarefa novamente (dar um retry) ou ir para uma etapa de "Comprar em outro lugar" em vez de simplesmente desistir de fazer o bolo.
+4. Acompanhamento Visual: Você consegue ver, em tempo real, qual etapa do processo está rodando, qual já terminou e qual falhou. É como ter uma tela mostrando o progresso da sua receita.
+
+Em Resumo
+
+O Step Functions pega um processo complexo que envolve várias partes e:
+* Simplifica: Você desenha o fluxo de trabalho em vez de escrever um monte de código complicado para gerenciar a ordem e os erros.
+* Garante a Ordem: As tarefas sempre rodam na sequência que você definiu.
+* Aguenta o Tranco: Se algo der errado, ele tenta consertar ou segue um plano de erro.
+É a forma que a AWS encontrou para transformar processos complicados em fluxogramas simples, confiáveis e que rodam automaticamente!
