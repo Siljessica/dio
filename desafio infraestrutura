@@ -1,0 +1,90 @@
+[10:28, 18/10/2025] Jéssica Branco: AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Template de CloudFormation para provisionar um Servidor Web simples (EC2 com Apache),
+  junto com um Security Group para permitir acesso HTTP e SSH.
+
+# =================================================================
+# 1. PARÂMETROS (Customização)
+# =================================================================
+Parameters:
+  KeyName:
+    Description: Nome do par de chaves EC2 existente para acesso SSH.
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Deve ser um nome de chave EC2 válido.
+
+  InstanceType:
+    Description: Tipo de instância EC2.
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t3.micro
+      - m5.large
+    ConstraintDescription: Deve ser um tipo de instância EC2 válido.
+
+# Mapeamento de AMIs (Imagens) por Região
+# Isso garante que o template funcione em múltiplas regiões, pois o ID da AMI muda.
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-053b0d53c2792790b # Amazon Linux 2023 AMI
+    sa-east-1:
+      AMI: ami-0d86f7b11d8820c7d # Amazon Linux 2023 AMI
+
+# =================================================================
+# 2. RECURSOS (Infraestrutura)
+# =================================================================
+Resources:
+  # 2.1. Grupo de Segurança (Firewall virtual)
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite acesso HTTP na porta 80 e SSH na porta 22
+      SecurityGroupIngress:
+        # Permite HTTP (acesso ao site) de qualquer IP (0.0.0.0/0)
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        # Permite SSH (acesso remoto seguro) de qualquer IP (0.0.0.0/0)
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: WebServer-SG
+
+  # 2.2. Instância EC2 (Servidor Web)
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup # Referencia o Security Group criado acima
+      
+      # Comandos de Inicialização (User Data) - A essência da automação!
+      # Este script instala o Apache (httpd) na primeira inicialização.
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install httpd -y
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<h1>Infraestrutura Automatizada com CloudFormation (DIO)</h1>" > /var/www/html/index.html
+      
+      Tags:
+        - Key: Name
+          Value: Servidor-Web-CloudFormation
+
+# =================================================================
+# 3. SAÍDAS (Valores importantes para o usuário)
+# =================================================================
+Outputs:
+  PublicIP:
+    Description: IP Público da Instância EC2
+    Value: !GetAtt WebServerInstance.PublicIp
